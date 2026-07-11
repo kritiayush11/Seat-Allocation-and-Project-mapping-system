@@ -46,11 +46,6 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         <div className="flex items-center justify-between px-6 py-5 border-b border-ethara-border">
           <div className="flex items-center gap-2.5 select-none">
             <img
-              src="/favicon.svg"
-              alt="Ethara icon"
-              className="h-8 w-8 object-contain shrink-0"
-            />
-            <img
               src="/logo.png"
               alt="Ethara.Ai"
               className="h-6 object-contain"
