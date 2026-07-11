@@ -2,8 +2,9 @@
 Application configuration using Pydantic BaseSettings.
 Follows Dependency Inversion Principle — settings injected, not hardcoded.
 """
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from functools import lru_cache
+from typing import List
 
 
 class Settings(BaseSettings):
@@ -16,8 +17,19 @@ class Settings(BaseSettings):
     APP_DESCRIPTION: str = "Manage seat allocation for 5,000 employees at Ethara"
     DEBUG: bool = True
 
-    # CORS
-    ALLOWED_ORIGINS: list[str] = ["http://localhost:5173", "http://localhost:3000", "http://localhost:80"]
+    # CORS — stored as raw string so pydantic-settings never tries to JSON-parse it.
+    # Accepts comma-separated (Render-friendly) OR JSON array:
+    #   ALLOWED_ORIGINS=https://myapp.onrender.com,http://localhost:3000
+    #   ALLOWED_ORIGINS=["https://myapp.onrender.com","http://localhost:3000"]
+    ALLOWED_ORIGINS_RAW: str = "http://localhost:5173,http://localhost:3000,http://localhost:80"
+
+    @property
+    def ALLOWED_ORIGINS(self) -> List[str]:
+        v = self.ALLOWED_ORIGINS_RAW.strip()
+        if v.startswith("["):
+            import json
+            return json.loads(v)
+        return [o.strip() for o in v.split(",") if o.strip()]
 
     # Security & JWT
     JWT_SECRET_KEY: str = "ethara_super_secret_signing_key_2026_prod"
@@ -39,9 +51,10 @@ class Settings(BaseSettings):
     DEFAULT_PAGE_SIZE: int = 50
     MAX_PAGE_SIZE: int = 200
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        case_sensitive=True,
+    )
 
 
 @lru_cache()
