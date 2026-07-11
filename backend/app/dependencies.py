@@ -17,7 +17,12 @@ from .models.user import User
 settings = get_settings()
 
 # Password hashing configuration
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# rounds=12 is standard for production. In local Docker (ARM emulation) this
+# costs ~220ms per hash. Set BCRYPT_ROUNDS=10 in .env to halve it to ~55ms
+# while keeping production at 12.
+import os
+_bcrypt_rounds = int(os.getenv("BCRYPT_ROUNDS", "12"))
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto", bcrypt__rounds=_bcrypt_rounds)
 
 # OAuth2 scheme for extracting JWT token from Authorization header
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
