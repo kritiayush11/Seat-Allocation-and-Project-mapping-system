@@ -25,7 +25,7 @@ _bcrypt_rounds = int(os.getenv("BCRYPT_ROUNDS", "12"))
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto", bcrypt__rounds=_bcrypt_rounds)
 
 # OAuth2 scheme for extracting JWT token from Authorization header
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
