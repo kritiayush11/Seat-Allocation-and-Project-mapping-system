@@ -80,9 +80,9 @@ class AIAgent:
             from langchain_openai import ChatOpenAI
             api_key = settings.GROK_API_KEY or settings.XAI_API_KEY
             llm = ChatOpenAI(
-                model="grok-beta",
+                model=settings.GROK_MODEL,          # grok-3-mini (free tier)
                 openai_api_key=api_key,
-                openai_api_base="https://api.xai.com/v1",
+                openai_api_base="https://api.x.ai/v1",  # correct xAI base URL
                 temperature=0.3
             )
             source = "grok"

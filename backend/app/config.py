@@ -43,9 +43,10 @@ class Settings(BaseSettings):
     # Gemini (optional)
     GEMINI_API_KEY: str = ""
 
-    # Grok (optional)
+    # Grok / xAI (free tier — grok-3-mini)
     GROK_API_KEY: str = ""
     XAI_API_KEY: str = ""
+    GROK_MODEL: str = "grok-3-mini"
 
     # Pagination
     DEFAULT_PAGE_SIZE: int = 50

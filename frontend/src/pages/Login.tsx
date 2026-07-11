@@ -1,5 +1,5 @@
 import { useState, FormEvent } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { authApi } from "../services/api";
 import { Card, CardHeader, CardTitle } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
@@ -11,7 +11,6 @@ export function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const navigate = useNavigate();
   const toast = useToast();
 
   const handleSubmit = async (e: FormEvent) => {
@@ -27,8 +26,6 @@ export function Login() {
 
       localStorage.setItem("token", response.access_token);
       toast.success("Successfully logged in!");
-
-      // Force trigger state reload on navigate
       window.location.href = "/";
     } catch (err: any) {
       console.error(err);
@@ -44,9 +41,7 @@ export function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-ethara-bg p-4 relative overflow-hidden">
-      {/* Background hexagon overlay */}
       <div className="fixed inset-0 bg-hex-pattern opacity-30 pointer-events-none" />
-
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-ethara-primary/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-ethara-secondary/10 rounded-full blur-3xl pointer-events-none" />
 
@@ -127,29 +122,6 @@ export function Login() {
           >
             Create an admin account
           </Link>
-        </div>
-
-        {/* Demo Credentials helper */}
-        <div className="mt-6 p-4 rounded-lg bg-secondary/50 border border-border text-xs space-y-2">
-          <p className="font-semibold text-foreground">Demo Accounts:</p>
-          <div className="flex flex-col gap-2 text-muted-foreground">
-            <div className="flex justify-between items-center">
-              <span>
-                <strong>Admin Username:</strong> admin
-              </span>
-              <span className="font-mono bg-black/20 px-2 py-0.5 rounded">
-                adminadmin123
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span>
-                <strong>HR Username:</strong> hr
-              </span>
-              <span className="font-mono bg-black/20 px-2 py-0.5 rounded">
-                hrhrpassword
-              </span>
-            </div>
-          </div>
         </div>
       </Card>
     </div>

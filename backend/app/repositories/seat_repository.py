@@ -25,7 +25,7 @@ class SeatRepository(BaseRepository[Seat]):
         if status:
             # Accept both SeatStatus enum and plain string values
             if isinstance(status, str):
-                status = SeatStatus(status.upper())
+                status = SeatStatus(status.lower())
             q = q.filter(Seat.status == status)
         return q.count()
 
