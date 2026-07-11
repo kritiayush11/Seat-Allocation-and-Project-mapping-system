@@ -205,6 +205,8 @@ def seed_database(db: Session, verbose: bool = True) -> dict:
             print(msg)
 
     # Seed default user accounts (admin/adminpassword, hr/hrpassword)
+    # Always update the hash on seed — ensures password works regardless of
+    # bcrypt version differences between environments or prior DB state.
     existing_admin = db.query(User).filter(User.username == "admin").first()
     if not existing_admin:
         log("Seeding default admin account...")
@@ -215,6 +217,10 @@ def seed_database(db: Session, verbose: bool = True) -> dict:
             is_admin=True,
         )
         db.add(admin_user)
+        db.commit()
+    else:
+        log("Refreshing admin password hash...")
+        existing_admin.hashed_password = get_password_hash("adminpassword")
         db.commit()
 
     existing_hr = db.query(User).filter(User.username == "hr").first()
@@ -227,6 +233,10 @@ def seed_database(db: Session, verbose: bool = True) -> dict:
             is_admin=False,
         )
         db.add(hr_user)
+        db.commit()
+    else:
+        log("Refreshing hr password hash...")
+        existing_hr.hashed_password = get_password_hash("hrpassword")
         db.commit()
 
     # Check if already seeded

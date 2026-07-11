@@ -1,4 +1,4 @@
-version: '3.9'
+version: "3.9"
 
 services:
   # ── PostgreSQL ──────────────────────────────────────────────────────────────
@@ -26,6 +26,7 @@ services:
     environment:
       DATABASE_URL: postgresql://ethara:ethara_secret@db:5432/ethara_seats
       DEBUG: "false"
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-ethara_docker_jwt_secret_key_change_in_prod_32chars}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       ALLOWED_ORIGINS: '["http://localhost","http://localhost:80","http://localhost:5173"]'
     ports:

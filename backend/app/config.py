@@ -48,11 +48,9 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     import secrets
     settings = Settings()
-    # Security rotate: If the secret key is empty or matches the hardcoded default,
-    # generate a highly secure random token for this session.
-    if (
-        not settings.JWT_SECRET_KEY
-        or settings.JWT_SECRET_KEY == "ethara_super_secret_signing_key_2026_prod"
-    ):
+    # Security rotate: only replace the key when it is the hardcoded placeholder.
+    # If JWT_SECRET_KEY was explicitly set via environment variable (e.g. in Docker
+    # or a real .env file), leave it unchanged so tokens remain valid across restarts.
+    if settings.JWT_SECRET_KEY == "ethara_super_secret_signing_key_2026_prod":
         settings.JWT_SECRET_KEY = secrets.token_hex(32)
     return settings
