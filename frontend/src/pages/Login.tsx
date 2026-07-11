@@ -138,7 +138,7 @@ export function Login() {
                 <strong>Admin Username:</strong> admin
               </span>
               <span className="font-mono bg-black/20 px-2 py-0.5 rounded">
-                admin123
+                adminadmin123
               </span>
             </div>
             <div className="flex justify-between items-center">
@@ -146,7 +146,7 @@ export function Login() {
                 <strong>HR Username:</strong> hr
               </span>
               <span className="font-mono bg-black/20 px-2 py-0.5 rounded">
-                hrpassword
+                hrhrpassword
               </span>
             </div>
           </div>
