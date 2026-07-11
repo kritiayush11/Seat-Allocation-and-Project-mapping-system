@@ -1,10 +1,13 @@
 """
 AI Assistant router.
+Rate limits:
+  POST /ai/query → 10/minute  (LLM API cost protection)
 """
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
 from ..database import get_db
+from ..limiter import limiter
 from ..services.ai_assistant_service import AIAssistantService
 from ..schemas.ai_assistant import AIQuery, AIResponse
 from ..dependencies import get_current_user
@@ -21,7 +24,9 @@ router = APIRouter(
     response_model=AIResponse,
     summary="Natural language query interface for seat and project information",
 )
+@limiter.limit("10/minute")
 def ai_query(
+    request: Request,
     body: AIQuery,
     db: Session = Depends(get_db),
 ):

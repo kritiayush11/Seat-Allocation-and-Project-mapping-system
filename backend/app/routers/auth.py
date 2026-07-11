@@ -1,11 +1,15 @@
 """
 Auth router — sign up, login, and profile endpoints.
 Single Responsibility: handles HTTP request/response parsing for authentication.
+Rate limits applied here (Open/Closed — add new routes without touching limiter config):
+  POST /auth/login  → 5/minute  (brute-force protection)
+  POST /auth/signup → 5/minute  (account spam protection)
 """
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from ..database import get_db
+from ..limiter import limiter
 from ..models.user import User
 from ..schemas.user import UserCreate, UserLogin, UserResponse, Token
 from ..dependencies import (
@@ -24,7 +28,8 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
     status_code=status.HTTP_201_CREATED,
     summary="Sign up a new admin account",
 )
-def signup(data: UserCreate, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def signup(request: Request, data: UserCreate, db: Session = Depends(get_db)):
     """
     Create a new administrator account.
     - **username** must be unique.
@@ -68,7 +73,8 @@ def signup(data: UserCreate, db: Session = Depends(get_db)):
     response_model=Token,
     summary="Log in and retrieve JWT access token",
 )
-def login(data: UserLogin, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def login(request: Request, data: UserLogin, db: Session = Depends(get_db)):
     """
     Authenticate administrative credentials.
     - Returns a bearer JWT access token.

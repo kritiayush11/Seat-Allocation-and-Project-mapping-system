@@ -1,12 +1,16 @@
 """
 Seats router — all /seats endpoints.
 Includes seat CRUD, allocation, release, and suggestion endpoints.
+Rate limits:
+  GET  /seats          → 60/minute  (browse protection)
+  POST /seats/allocate → 20/minute  (booking/hoarding protection)
 """
 from typing import Optional, List
-from fastapi import APIRouter, Depends, Query, status, HTTPException
+from fastapi import APIRouter, Depends, Query, Request, status, HTTPException
 from sqlalchemy.orm import Session
 
 from ..database import get_db
+from ..limiter import limiter
 from ..services.seat_allocation_service import SeatAllocationService
 from ..schemas.seat import (
     SeatCreate, SeatUpdate, SeatResponse, SeatListResponse,
@@ -54,7 +58,9 @@ def create_seat(
     response_model=SeatListResponse,
     summary="List seats with optional filters",
 )
+@limiter.limit("60/minute")
 def list_seats(
+    request: Request,
     floor: Optional[int] = Query(None, ge=1),
     zone: Optional[str] = Query(None, max_length=10),
     seat_status: Optional[SeatStatus] = Query(None, alias="status"),
@@ -143,8 +149,10 @@ def update_seat(
     status_code=status.HTTP_201_CREATED,
     summary="Allocate a seat to an employee",
 )
+@limiter.limit("20/minute")
 def allocate_seat(
-    request: AllocateRequest,
+    request: Request,
+    data: AllocateRequest,
     service: SeatAllocationService = Depends(get_service),
 ):
     """
@@ -154,7 +162,7 @@ def allocate_seat(
     - Raises 409 if employee already has a seat or seat is already occupied.
     - Raises 403 if seat is reserved or under maintenance.
     """
-    return service.allocate_seat(request)
+    return service.allocate_seat(data)
 
 
 @router.post(

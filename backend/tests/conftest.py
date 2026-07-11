@@ -21,6 +21,20 @@ from app.models.seat_allocation import SeatAllocation, AllocationStatus
 from datetime import date
 
 
+@pytest.fixture(autouse=True)
+def reset_rate_limiter():
+    """
+    Reset slowapi in-memory counters before every test so rate limit state
+    from one test never bleeds into another.
+    """
+    try:
+        from app.limiter import limiter
+        limiter.reset()
+    except Exception:
+        pass
+    yield
+
+
 @pytest.fixture(scope="function")
 def db_engine():
     # Use a temp file so all connections within a test see the same DB
