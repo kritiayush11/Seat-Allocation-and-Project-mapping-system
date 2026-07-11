@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: ethara-backend
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips "*"
+    envVars:
+      - key: DATABASE_URL
+        sync: false   # set in Render dashboard — never commit secrets
+      - key: JWT_SECRET_KEY
+        sync: false
+      - key: ALLOWED_ORIGINS_RAW
+        value: https://ethara-frontend12.netlify.app
+      - key: DEBUG
+        value: "false"
+      - key: PYTHON_VERSION
+        value: "3.11.9"
