@@ -137,7 +137,7 @@ export function Login() {
               <span>
                 <strong>Admin Username:</strong> admin
               </span>
-              <span>adminpassword</span>
+              <span>admin123</span>
             </div>
             <div className="flex justify-between">
               <span>
