@@ -3,7 +3,7 @@ EmployeeRepository — Single Responsibility: all employee DB queries live here.
 """
 from typing import Optional, List, Tuple
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import or_, func
+from sqlalchemy import or_, func, select
 from .base import BaseRepository
 from ..models.employee import Employee, EmployeeStatus
 from ..models.seat_allocation import SeatAllocation, AllocationStatus
