@@ -132,18 +132,22 @@ export function Login() {
         {/* Demo Credentials helper */}
         <div className="mt-6 p-4 rounded-lg bg-secondary/50 border border-border text-xs space-y-2">
           <p className="font-semibold text-foreground">Demo Accounts:</p>
-          <div className="flex flex-col gap-1 text-muted-foreground">
-            <div className="flex justify-between">
+          <div className="flex flex-col gap-2 text-muted-foreground">
+            <div className="flex justify-between items-center">
               <span>
                 <strong>Admin Username:</strong> admin
               </span>
-              <span>admin123</span>
+              <span className="font-mono bg-black/20 px-2 py-0.5 rounded">
+                adminadmin123
+              </span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between items-center">
               <span>
                 <strong>HR Username:</strong> hr
               </span>
-              <span>hrpassword</span>
+              <span className="font-mono bg-black/20 px-2 py-0.5 rounded">
+                hrhrpassword
+              </span>
             </div>
           </div>
         </div>
