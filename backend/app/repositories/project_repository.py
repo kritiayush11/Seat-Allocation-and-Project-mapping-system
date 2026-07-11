@@ -1,7 +1,7 @@
 """
 ProjectRepository — Single Responsibility: all project DB queries.
 """
-from typing import Optional, List
+from typing import Optional, List, Tuple
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from .base import BaseRepository
@@ -14,6 +14,30 @@ class ProjectRepository(BaseRepository[Project]):
 
     def __init__(self, db: Session):
         super().__init__(Project, db)
+
+    def search(
+        self,
+        query: Optional[str] = None,
+        status: Optional[ProjectStatus] = None,
+        skip: int = 0,
+        limit: int = 50,
+    ) -> Tuple[List[Project], int]:
+        """Full-text search over project name and description."""
+        from sqlalchemy import or_
+        q = self.db.query(Project)
+        if query:
+            q = q.filter(
+                or_(
+                    Project.name.ilike(f"%{query}%"),
+                    Project.description.ilike(f"%{query}%"),
+                    Project.manager_name.ilike(f"%{query}%"),
+                )
+            )
+        if status:
+            q = q.filter(Project.status == status)
+        total = q.count()
+        projects = q.order_by(Project.name).offset(skip).limit(limit).all()
+        return projects, total
 
     def get_by_name(self, name: str) -> Optional[Project]:
         return self.db.query(Project).filter(

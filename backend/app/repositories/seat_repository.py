@@ -19,6 +19,16 @@ class SeatRepository(BaseRepository[Seat]):
 
     # ── Seat lookups ────────────────────────────────────────────────────────
 
+    def count(self, status: Optional[SeatStatus] = None) -> int:  # type: ignore[override]
+        """Count seats, optionally filtered by status."""
+        q = self.db.query(Seat)
+        if status:
+            # Accept both SeatStatus enum and plain string values
+            if isinstance(status, str):
+                status = SeatStatus(status.upper())
+            q = q.filter(Seat.status == status)
+        return q.count()
+
     def get_by_location(self, floor: int, zone: str, bay: str, seat_number: str) -> Optional[Seat]:
         return (
             self.db.query(Seat)
