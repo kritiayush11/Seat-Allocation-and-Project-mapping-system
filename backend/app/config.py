@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     # Accepts comma-separated (Render-friendly) OR JSON array:
     #   ALLOWED_ORIGINS=https://myapp.onrender.com,http://localhost:3000
     #   ALLOWED_ORIGINS=["https://myapp.onrender.com","http://localhost:3000"]
-    ALLOWED_ORIGINS_RAW: str = "http://localhost:5173,http://localhost:3000,http://localhost:80"
+    ALLOWED_ORIGINS_RAW: str = "https://ethara-frontend12.netlify.app,http://localhost:5173,http://localhost:3000,http://localhost:80"
 
     @property
     def ALLOWED_ORIGINS(self) -> List[str]:
