@@ -1,67 +1,101 @@
-# Project Upgrades & Security Audit Summary
+# Project Upgrades & Technical Changelog
 
-This document summarizes all upgrades, migrations, new features, and security enhancements implemented across the frontend and backend of the **Ethara Seat Allocation & Project Mapping System**.
-
----
-
-## 1. Frontend Build System & Styling Upgrades
-
-* **Vite to Craco Migration**: Migrated the react-scripts compiler to **Craco (Webpack)**. Exposed standard package configurations in `package.json` and adjusted build parameters to load dynamic PostCSS loaders and `@` path aliases.
-* **React 19 & Radix UI**: Upgraded React core to **version 19.0.0** and react-router-dom to **version 7.15.0**. Installed full Radix Primitive components, Framer Motion, and Sonner.
-* **Shadcn Color Variable Themes**: Added standard light/dark HSL styling tokens in `src/index.css`. Mapped legacy brand classes (like `ethara-card`, `ethara-input`, and `ethara-btn-primary`) directly to these variable tokens.
-* **Dockerfile Paths**: Updated the Docker deployment file to copy files from `/app/build` (instead of `/app/dist`) and passed `--legacy-peer-deps` to handle compilation cleanly.
+All upgrades, migrations, bug fixes, and architecture decisions for the **Ethara Seat Allocation & Project Mapping System**.
 
 ---
 
-## 2. Public Landing Page & Home View
+## Release: July 2026 — Production Deployment on Render + Netlify
 
-Implemented the premium public-facing marketing landing page under `/` (moving the main administration panel to `/dashboard` protected behind route authentication):
-- **Hero Grid**: Styled gradient fuchsia-to-violet typography (*"Every seat. Every project. One glance."*) with visual glow blurs and background hexagon grid overlays.
-- **Interactive Live Snapshot Card**: Displays real-time office capacities alongside an 8x5 grid mockup showing color-coded seat statuses (available, occupied, reserved).
-- **Navbar Links**: Integrated header pills (Dashboard, Employees, Seats, Assistant) with dynamic Sign In / Sign Out actions dependent on auth status.
+### Database: SQLite → Neon PostgreSQL
+
+- Migrated all data from `ethara_seats.db` (SQLite) to **Neon PostgreSQL 16** hosted in `ap-southeast-1`
+- Migrated 5,001 employees, 5,500 seats, 4,951 seat allocations, 11 projects
+- Custom Python migration script using SQLAlchemy Core with FK-safe insertion order and `TRUNCATE ... CASCADE`
+- Backend `.env` updated with Neon pooled connection string (`sslmode=require`)
+
+### Critical Bug Fix: UPPERCASE Enum Mismatch
+
+- **Root cause:** Neon PostgreSQL stores enums as UPPERCASE (`AVAILABLE`, `OCCUPIED`, `ACTIVE`) but all Python models defined them as lowercase. Every INSERT and UPDATE was rejected by Postgres with `invalid input value for enum`.
+- **Fix:** Updated all four models (`seat.py`, `employee.py`, `project.py`, `seat_allocation.py`) to use UPPERCASE enum values matching Neon. Used `create_type=False` on `SAEnum` so SQLAlchemy never tries to recreate the existing Neon enum types.
+- **API compatibility preserved:** Added `field_serializer` to all response schemas so JSON output still returns lowercase strings (`"active"`, `"occupied"`) — no frontend or test changes needed.
+- **Input flexibility:** Added `field_validator` with `.upper()` normalisation to all `*Update` schemas so both `"archived"` and `"ARCHIVED"` are accepted as input.
+- Also fixed `seat_repository.count_by_status()` and `floor_utilization()` to use UPPERCASE dict keys, and `dashboard_service.py` to look up UPPERCASE keys from the seat counts map.
+
+### AI Agent: LangChain Removed → Direct OpenAI SDK
+
+- **Replaced** the entire LangChain-based `AIAgent` with a direct **OpenAI SDK tool-calling loop**
+- Works with **xAI Grok**, OpenAI, or Gemini (all via the same OpenAI-compatible API interface)
+- Provider priority: **Grok (xAI free tier) → OpenAI → Gemini**
+- Model: `grok-3-mini` (free, set via `GROK_MODEL` env var)
+- Tool-calling loop: up to 5 rounds, each round dispatches DB tools and feeds results back to the model
+- DB tools: `get_employee_seat`, `search_seats`, `get_seat_utilization`, `search_projects`, `find_neighbors`
+- Chat history persisted in `chat_messages` table (Neon) per `session_id`
+- **Why removed LangChain:** Version conflicts, 5+ abstraction layers over a simple API call, harder to debug, slower startup
+- `ai_assistant_service.py` updated: agent is invoked when any API key is present (previously gated on `session_id` being set)
+- `AIAssistant.tsx` subtitle updated to reflect Grok/Neon integration
+
+### Deployment
+
+- **Backend** deployed on **Render** (free web service, Python runtime)
+  - Start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips "*"`
+  - `--proxy-headers` is required — without it Render's reverse proxy strips POST request bodies, causing `input: null` 422 errors
+- **Frontend** deployed on **Netlify** — `https://ethara-frontend12.netlify.app`
+  - `frontend/.env.production` sets `REACT_APP_API_URL=https://ethara-backend-xnma.onrender.com`
+  - CORS: `ALLOWED_ORIGINS_RAW` in Render env vars includes the Netlify domain
+- **Database** on **Neon** — `https://console.neon.tech` (PostgreSQL 16)
+
+### Auth Fix: Empty JWT Secret
+
+- `JWT_SECRET_KEY` was left empty in `.env`, breaking the security rotation guard in `config.py`
+- Fixed: set a fixed 64-char hex secret in `backend/.env` so tokens survive restarts
+- `get_settings()` rotation guard now only replaces the hardcoded placeholder string, not an empty string
+
+### CORS Fix: `pydantic-settings` SettingsError
+
+- `ALLOWED_ORIGINS` as a `List[str]` field caused `SettingsError: error parsing value for field` on Render because pydantic-settings tries to JSON-decode any list field from env vars
+- **Fix:** Renamed to `ALLOWED_ORIGINS_RAW: str` with a `@property` that splits on commas or parses JSON — fully Render-compatible
+
+### Login Page
+
+- Removed demo credentials helper box from the login page
+- Users create their own admin accounts via `/auth/signup`
+- Admin accounts on Neon: `admin` (password: `admin123`), `hr` (password: `hrpassword`)
 
 ---
 
-## 3. Conversational AI Agent & Memory (LangChain)
+## Release: July 11, 2026 — Security & Rate Limiting
 
-Upgraded the rule-based assistant to a fully conversational AI agent utilizing **LangChain** and database query bindings:
-- **API Key Compatibility**: Automatically detects and uses **Google Gemini** (`GEMINI_API_KEY`), **xAI Grok** (`GROK_API_KEY` / `XAI_API_KEY`), or **OpenAI** (`OPENAI_API_KEY`) based on `.env` settings.
-- **Dynamic Database Tools**: Wrapped SQLAlchemy safe queries into functional tools:
-  - `get_employee_seat(email_or_name)`: Gets an employee's seat coordinate and project.
-  - `search_seats(floor, zone, status)`: Searches seats matching filters.
-  - `get_seat_utilization()`: Dynamic metrics summary.
-  - `search_projects(query)`: Search projects.
-  - `find_neighbors(email_or_name)`: Spot co-workers in the same zone.
-- **In-Database Memory**: Created the `chat_messages` model to persist conversations associated with a unique client `session_id`, making previous context recall possible across multiple request inputs.
+### JWT Security (TDD)
 
----
+- `JWT_SECRET_KEY` defaulted to a static hardcoded string. Added a failing security test, then patched `get_settings()` to auto-rotate with `secrets.token_hex(32)` if the placeholder is detected at startup.
+- `test_security_tdd.py::test_jwt_secret_key_security` — passes.
 
-## 4. NLP Voice Dictation (Speech-to-Text)
+### Rate Limiting via slowapi
 
-- Configured a microphone dictation button (`Mic` / `MicOff`) inside the AI Assistant chat bar.
-- Integrates the browser's native **Web Speech API (`webkitSpeechRecognition`)** to transcribe voice commands into text locally without extra latency or API key usage.
+- `POST /auth/login` and `POST /auth/signup` → 5/minute (brute-force protection)
+- `GET /seats` → 60/minute (DB scraping protection)
+- `POST /seats/allocate` → 20/minute (seat-hoarding prevention)
+- `POST /ai/query` → 10/minute (LLM cost protection)
+- Custom `_get_client_ip()` reads `X-Forwarded-For` header — works correctly behind Render's proxy
+- 13 rate-limit TDD tests across all 5 rate-limited endpoints + per-IP isolation test
 
 ---
 
-## 5. Security & Cybersecurity Hardening
+## Release: Initial — Full-Stack Scaffold
 
-Conducted a cybersecurity audit and successfully resolved a critical vulnerability:
-- **Leaked JWT Secret Key Fix (TDD)**: The `JWT_SECRET_KEY` defaulted to a static hardcoded key in the repository. We wrote a failing security test case, then patched `get_settings()` inside `config.py` to dynamically execute Python's **Cryptographic Session Generation** (`secrets.token_hex(32)`) on server initialization if the default key is present.
-- **AI Query Isolation (Principle of Least Privilege)**: Bounded the LangChain agent's tools to read-only endpoints, entirely separating the LLM model from user login data and password tables to prevent credential leaks via prompt injection.
-- **Verified Suite**: All **82 pytest cases passed** cleanly.
+### Frontend Build System
 
----
+- Migrated from Vite to **Craco (Webpack)** to align with `react-scripts` conventions
+- React 19 + TypeScript, react-router-dom v7, TanStack React Query, Radix UI, Framer Motion
+- Tailwind CSS dark theme with Ethara brand tokens (navy + magenta)
 
-## 6. Seeded Test Credentials
+### Conversational AI Agent (original LangChain version)
 
-The database seeding function now automatically provisions the following default credentials:
-* **Admin Role**: `admin` / `adminpassword`
-* **HR Role**: `hr` / `hrpassword`
-* Helper instructions detailing these logins have been placed directly on the login card.
+- LangChain agent with Gemini / Grok / OpenAI key detection and DB-bound tools
+- In-database memory via `chat_messages` table (later preserved in the SDK rewrite)
+- Voice dictation via Web Speech API in `AIAssistant.tsx`
 
----
+### Version Control
 
-## 7. Version Control Protection (.gitignore)
-
-- **Root .gitignore**: Created a comprehensive `.gitignore` file in the project root.
-- **Leakage Prevention**: Blocks accidental commitments of local environment files (`.env`), SQLite databases (`ethara_seats.db`, including `-shm` and `-wal` log overlays), python virtual environments (`.venv`), and node packages (`node_modules/`).
+- Comprehensive `.gitignore` blocks `.env`, `*.db`, `.venv`, `node_modules`, `build/`, `.DS_Store`
+- `backend/.env` is never committed — credentials managed via Render dashboard env vars

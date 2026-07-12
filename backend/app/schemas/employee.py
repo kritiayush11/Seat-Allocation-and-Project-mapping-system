@@ -4,10 +4,11 @@ Pydantic schemas for Employee entity.
 Enum serialisation note:
   Models store UPPERCASE values (matching Neon PostgreSQL enum types).
   API responses serialise them as lowercase for frontend/test consistency.
+  Input accepts both cases ('active' and 'ACTIVE') via field_validator.
 """
 from datetime import datetime, date
-from typing import Optional
-from pydantic import BaseModel, EmailStr, Field, field_serializer
+from typing import Optional, Any
+from pydantic import BaseModel, EmailStr, Field, field_serializer, field_validator
 from ..models.employee import EmployeeStatus
 from .project import ProjectSummary
 from .seat import SeatResponse
@@ -21,6 +22,14 @@ class EmployeeBase(BaseModel):
     joining_date: date = Field(default_factory=date.today)
     status: EmployeeStatus = EmployeeStatus.ACTIVE
     project_id: Optional[int] = None
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def normalise_status(cls, v: Any) -> Any:
+        """Accept 'active', 'ACTIVE', 'inactive' etc — normalise to UPPERCASE."""
+        if isinstance(v, str):
+            return v.upper()
+        return v
 
 
 class EmployeeCreate(EmployeeBase):
@@ -38,6 +47,13 @@ class EmployeeUpdate(BaseModel):
     joining_date: Optional[date] = None
     status: Optional[EmployeeStatus] = None
     project_id: Optional[int] = None
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def normalise_status(cls, v: Any) -> Any:
+        if isinstance(v, str):
+            return v.upper()
+        return v
 
 
 class SeatInfo(BaseModel):

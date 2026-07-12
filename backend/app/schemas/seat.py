@@ -7,8 +7,8 @@ Enum serialisation note:
   tests can rely on consistent lowercase strings.
 """
 from datetime import datetime, date
-from typing import Optional
-from pydantic import BaseModel, Field, field_serializer
+from typing import Optional, Any
+from pydantic import BaseModel, Field, field_serializer, field_validator
 from ..models.seat import SeatStatus
 from ..models.seat_allocation import AllocationStatus
 
@@ -23,6 +23,13 @@ class SeatBase(BaseModel):
 class SeatCreate(SeatBase):
     status: SeatStatus = SeatStatus.AVAILABLE
 
+    @field_validator("status", mode="before")
+    @classmethod
+    def normalise_status(cls, v: Any) -> Any:
+        if isinstance(v, str):
+            return v.upper()
+        return v
+
 
 class SeatUpdate(BaseModel):
     status: Optional[SeatStatus] = None
@@ -30,6 +37,13 @@ class SeatUpdate(BaseModel):
     zone: Optional[str] = Field(None, max_length=10)
     bay: Optional[str] = Field(None, max_length=20)
     seat_number: Optional[str] = Field(None, max_length=30)
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def normalise_status(cls, v: Any) -> Any:
+        if isinstance(v, str):
+            return v.upper()
+        return v
 
 
 class AllocationSummary(BaseModel):
