@@ -1,6 +1,10 @@
 # Ethara Seat Allocation & Project Mapping System
 
-> A full-stack application managing seat allocation for ~5,000 employees across floors, zones, and projects — with an AI assistant powered by Grok (xAI) querying live Neon PostgreSQL data.
+> A full-stack application managing seat allocation for ~5,000 employees across floors, zones, and projects — with an AI assistant powered by Groq (xAI) querying live Neon PostgreSQL data.
+
+**Frontend:** [ethara-frontend12.netlify.app](https://ethara-frontend12.netlify.app)
+ 
+**Backend:** [https://ethara-backend-xnma.onrender.com](https://ethara-backend-xnma.onrender.com)
 
 ---
 
