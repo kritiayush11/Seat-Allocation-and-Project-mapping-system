@@ -29,10 +29,10 @@ class DashboardService:
         seat_counts = self.seat_repo.count_by_status()
 
         total_seats = sum(seat_counts.values())
-        occupied = seat_counts.get("occupied", 0)
-        available = seat_counts.get("available", 0)
-        reserved = seat_counts.get("reserved", 0)
-        maintenance = seat_counts.get("maintenance", 0)
+        occupied = seat_counts.get("OCCUPIED", 0)
+        available = seat_counts.get("AVAILABLE", 0)
+        reserved = seat_counts.get("RESERVED", 0)
+        maintenance = seat_counts.get("MAINTENANCE", 0)
 
         return DashboardSummary(
             total_employees=total_emp,

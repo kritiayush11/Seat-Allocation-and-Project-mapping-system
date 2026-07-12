@@ -20,12 +20,12 @@ class SeatRepository(BaseRepository[Seat]):
     # ── Seat lookups ────────────────────────────────────────────────────────
 
     def count(self, status: Optional[SeatStatus] = None) -> int:  # type: ignore[override]
-        """Count seats, optionally filtered by status."""
+        """Count seats, optionally filtered by status. Accepts SeatStatus enum or string."""
         q = self.db.query(Seat)
-        if status:
-            # Accept both SeatStatus enum and plain string values
+        if status is not None:
             if isinstance(status, str):
-                status = SeatStatus(status.lower())
+                # Normalise to uppercase to match Neon enum values
+                status = SeatStatus(status.upper())
             q = q.filter(Seat.status == status)
         return q.count()
 
@@ -163,18 +163,18 @@ class SeatRepository(BaseRepository[Seat]):
                 .all()
             )
             count_map = {
-                (s.value if hasattr(s, "value") else str(s)): c
+                (s.value if hasattr(s, "value") else str(s)).upper(): c
                 for s, c in counts
             }
             total = sum(count_map.values())
-            occupied = count_map.get("occupied", 0)
+            occupied = count_map.get("OCCUPIED", 0)
             result.append({
                 "floor": floor,
                 "total_seats": total,
                 "occupied": occupied,
-                "available": count_map.get("available", 0),
-                "reserved": count_map.get("reserved", 0),
-                "maintenance": count_map.get("maintenance", 0),
+                "available": count_map.get("AVAILABLE", 0),
+                "reserved": count_map.get("RESERVED", 0),
+                "maintenance": count_map.get("MAINTENANCE", 0),
                 "occupancy_rate": round(occupied / total * 100, 1) if total else 0.0,
             })
         return result

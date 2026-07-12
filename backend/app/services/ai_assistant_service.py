@@ -27,11 +27,15 @@ class AIAssistantService:
         self.db = db
 
     def answer(self, query: str, session_id: Optional[str] = None) -> AIResponse:
-        if session_id:
-            if settings.GEMINI_API_KEY or settings.GROK_API_KEY or settings.XAI_API_KEY or settings.OPENAI_API_KEY:
-                from .ai_agent import AIAgent
-                agent = AIAgent(self.db, session_id)
-                return agent.run(query)
+        # Always use AI agent if ANY key is configured — session_id is optional for memory
+        has_key = (
+            settings.GROK_API_KEY or settings.XAI_API_KEY
+            or settings.OPENAI_API_KEY or settings.GEMINI_API_KEY
+        )
+        if has_key:
+            from .ai_agent import AIAgent
+            agent = AIAgent(self.db, session_id or "default")
+            return agent.run(query)
 
         intent = self.parser.parse(query)
 

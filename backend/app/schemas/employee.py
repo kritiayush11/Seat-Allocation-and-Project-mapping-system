@@ -1,9 +1,13 @@
 """
 Pydantic schemas for Employee entity.
+
+Enum serialisation note:
+  Models store UPPERCASE values (matching Neon PostgreSQL enum types).
+  API responses serialise them as lowercase for frontend/test consistency.
 """
 from datetime import datetime, date
 from typing import Optional
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_serializer
 from ..models.employee import EmployeeStatus
 from .project import ProjectSummary
 from .seat import SeatResponse
@@ -54,6 +58,10 @@ class EmployeeResponse(EmployeeBase):
     created_at: datetime
     project: Optional[ProjectSummary] = None
     seat: Optional[SeatInfo] = None
+
+    @field_serializer("status")
+    def serialize_status(self, v: EmployeeStatus) -> str:
+        return v.value.lower()
 
     model_config = {"from_attributes": True}
 

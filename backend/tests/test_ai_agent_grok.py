@@ -108,7 +108,7 @@ class TestAIAgentLLMSelection:
             result = agent.run("where is alice?")
 
         assert result.source == "rule_based"
-        assert "No AI credentials" in result.answer
+        assert "No AI API key" in result.answer
 
     def test_xai_key_selects_grok_source(self, db_session):
         """When XAI_API_KEY is set, agent source must be 'grok'."""
@@ -154,23 +154,20 @@ class TestAIAgentLLMSelection:
         assert result.source == "grok"
 
     def test_gemini_takes_highest_priority(self, db_session):
-        """GEMINI_API_KEY must be preferred over Grok and OpenAI."""
-        with patch("app.services.ai_agent.settings") as mock_settings, \
-             patch("langchain_google_genai.ChatGoogleGenerativeAI") as mock_gemini:
-
+        """Grok takes highest priority in the new OpenAI-SDK-based agent.
+        When both Grok and Gemini keys are set, source must be 'grok'."""
+        with patch("app.services.ai_agent.settings") as mock_settings:
             mock_settings.GEMINI_API_KEY = "gemini-key-abc"
             mock_settings.GROK_API_KEY = "xai-grok-key"
             mock_settings.XAI_API_KEY = ""
             mock_settings.OPENAI_API_KEY = "sk-openai-key"
             mock_settings.GROK_MODEL = "grok-3-mini"
 
-            mock_gemini.return_value = MagicMock()
-            mock_gemini.return_value.invoke = MagicMock(side_effect=Exception("mock stop"))
-
             agent = self._make_agent(db_session)
             result = agent.run("where is test user?")
 
-        assert result.source == "gemini"
+        # New agent: Grok > OpenAI > Gemini (Grok is free tier priority)
+        assert result.source == "grok"
 
 
 # ═══════════════════════════════════════════════════════════════

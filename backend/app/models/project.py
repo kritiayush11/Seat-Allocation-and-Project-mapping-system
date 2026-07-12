@@ -1,6 +1,8 @@
 """
 Project ORM model.
 Single Responsibility: represents the projects table only.
+
+IMPORTANT: Enum values MUST match the Neon PostgreSQL enum type exactly (UPPERCASE).
 """
 from datetime import datetime
 from sqlalchemy import Column, Integer, String, DateTime, Enum as SAEnum
@@ -10,24 +12,23 @@ import enum
 
 
 class ProjectStatus(str, enum.Enum):
-    ACTIVE = "active"
-    INACTIVE = "inactive"
-    ARCHIVED = "archived"
+    ACTIVE   = "ACTIVE"
+    INACTIVE = "INACTIVE"
+    ARCHIVED = "ARCHIVED"
 
 
 class Project(Base):
     __tablename__ = "projects"
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(100), unique=True, nullable=False, index=True)
-    description = Column(String(500), nullable=True)
+    id           = Column(Integer, primary_key=True, index=True)
+    name         = Column(String(100), unique=True, nullable=False, index=True)
+    description  = Column(String(500), nullable=True)
     manager_name = Column(String(150), nullable=True)
-    status = Column(SAEnum(ProjectStatus), default=ProjectStatus.ACTIVE, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    status       = Column(SAEnum(ProjectStatus, create_type=False), default=ProjectStatus.ACTIVE, nullable=False)
+    created_at   = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at   = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Relationships
-    employees = relationship("Employee", back_populates="project", lazy="dynamic")
+    employees        = relationship("Employee", back_populates="project", lazy="dynamic")
     seat_allocations = relationship("SeatAllocation", back_populates="project", lazy="dynamic")
 
     def __repr__(self) -> str:

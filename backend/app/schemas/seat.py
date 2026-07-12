@@ -1,9 +1,14 @@
 """
 Pydantic schemas for Seat and SeatAllocation entities.
+
+Enum serialisation note:
+  Models store UPPERCASE values (matching Neon PostgreSQL enum types).
+  API responses serialise them as lowercase so the frontend and existing
+  tests can rely on consistent lowercase strings.
 """
 from datetime import datetime, date
 from typing import Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_serializer
 from ..models.seat import SeatStatus
 from ..models.seat_allocation import AllocationStatus
 
@@ -38,6 +43,10 @@ class AllocationSummary(BaseModel):
     allocation_date: date
     allocation_status: AllocationStatus
 
+    @field_serializer("allocation_status")
+    def serialize_allocation_status(self, v: AllocationStatus) -> str:
+        return v.value.lower()
+
     model_config = {"from_attributes": True}
 
 
@@ -46,6 +55,10 @@ class SeatResponse(SeatBase):
     status: SeatStatus
     created_at: datetime
     current_allocation: Optional[AllocationSummary] = None
+
+    @field_serializer("status")
+    def serialize_status(self, v: SeatStatus) -> str:
+        return v.value.lower()
 
     model_config = {"from_attributes": True}
 
@@ -76,5 +89,9 @@ class SeatAllocationResponse(BaseModel):
     allocation_date: date
     released_date: Optional[date]
     seat: Optional[SeatResponse] = None
+
+    @field_serializer("allocation_status")
+    def serialize_allocation_status(self, v: AllocationStatus) -> str:
+        return v.value.lower()
 
     model_config = {"from_attributes": True}

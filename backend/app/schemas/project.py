@@ -1,10 +1,13 @@
 """
 Pydantic schemas for Project entity.
-Separates API contract from ORM model (ISP — callers only see what they need).
+
+Enum serialisation note:
+  Models store UPPERCASE values (matching Neon PostgreSQL enum types).
+  API responses serialise them as lowercase for frontend/test consistency.
 """
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_serializer, field_validator
 from ..models.project import ProjectStatus
 
 
@@ -25,12 +28,24 @@ class ProjectUpdate(BaseModel):
     manager_name: Optional[str] = None
     status: Optional[ProjectStatus] = None
 
+    @field_validator("status", mode="before")
+    @classmethod
+    def normalise_status(cls, v):
+        """Accept both 'ARCHIVED' and 'archived' — normalise to uppercase."""
+        if isinstance(v, str):
+            return v.upper()
+        return v
+
 
 class ProjectResponse(ProjectBase):
     id: int
     created_at: datetime
     employee_count: Optional[int] = 0
     occupied_seats: Optional[int] = 0
+
+    @field_serializer("status")
+    def serialize_status(self, v: ProjectStatus) -> str:
+        return v.value.lower()
 
     model_config = {"from_attributes": True}
 
@@ -40,5 +55,9 @@ class ProjectSummary(BaseModel):
     id: int
     name: str
     status: ProjectStatus
+
+    @field_serializer("status")
+    def serialize_status(self, v: ProjectStatus) -> str:
+        return v.value.lower()
 
     model_config = {"from_attributes": True}
