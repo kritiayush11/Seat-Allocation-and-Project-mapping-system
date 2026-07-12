@@ -130,7 +130,7 @@ export function AIAssistant() {
         <div>
           <h2 className="text-2xl font-bold text-white">AI Assistant</h2>
           <p className="text-ethara-muted text-sm">
-            Powered by Grok (xAI) — queries live Neon data
+            Powered by Groq (Llama 3.3) — queries live Neon data
           </p>
         </div>
         <div className="ml-auto flex items-center gap-1.5 text-xs text-ethara-success bg-ethara-success/10 border border-ethara-success/20 px-2.5 py-1 rounded-full">
