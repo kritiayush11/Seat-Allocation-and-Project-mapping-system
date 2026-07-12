@@ -401,3 +401,18 @@ Environment variable: `REACT_APP_API_URL=https://ethara-backend-xnma.onrender.co
 | `ethara-success`   | `#10b981` | Available status              |
 | `ethara-warning`   | `#f59e0b` | Reserved status               |
 | `ethara-error`     | `#ef4444` | Occupied / error status       |
+
+
+## Screenshots
+<img width="1920" height="1080" alt="Screenshot 2026-07-12 at 1 15 22 PM" src="https://github.com/user-attachments/assets/5f370891-8824-4d68-a8bb-bc92c6ef3e1d" />
+<img width="1920" height="1080" alt="Screenshot 2026-07-12 at 1 15 42 PM" src="https://github.com/user-attachments/assets/d6ad92c2-6f9c-4204-adec-0e1a955b4eac" />
+<img width="1920" height="1080" alt="Screenshot 2026-07-12 at 1 15 52 PM" src="https://github.com/user-attachments/assets/233f8f07-a87d-444c-87a2-5eed8a8ec167" />
+<img width="1920" height="1080" alt="Screenshot 2026-07-12 at 1 16 02 PM" src="https://github.com/user-attachments/assets/7ffac3d0-5b47-4572-9c6d-b2577bb7ff51" />
+<img width="1920" height="1080" alt="Screenshot 2026-07-12 at 1 16 05 PM" src="https://github.com/user-attachments/assets/7ebbad77-a16a-4450-993a-049d14aa60be" />
+<img width="1920" height="1080" alt="Screenshot 2026-07-12 at 1 16 07 PM" src="https://github.com/user-attachments/assets/b630f82c-c5f5-44eb-af1c-c77412d92433" />
+<img width="1920" height="1080" alt="Screenshot 2026-07-12 at 1 16 09 PM" src="https://github.com/user-attachments/assets/1210ddee-d6bd-429b-b5ed-1e9fe2fe59f5" />
+<img width="1920" height="1080" alt="Screenshot 2026-07-12 at 1 16 14 PM" src="https://github.com/user-attachments/assets/55e017f9-6f99-406a-9506-279f03fcd7ac" />
+<img width="1920" height="1080" alt="Screenshot 2026-07-12 at 1 16 21 PM" src="https://github.com/user-attachments/assets/f8288897-3296-45c7-9a31-aea3e567a85c" />
+<img width="1920" height="1080" alt="Screenshot 2026-07-12 at 1 16 41 PM" src="https://github.com/user-attachments/assets/b510ae3c-04e2-41bd-97f5-bffe7895482a" />
+<img width="1920" height="1080" alt="Screenshot 2026-07-12 at 1 16 48 PM" src="https://github.com/user-attachments/assets/55872bf2-90ab-492d-ba3f-e2fea0c60610" />
+
