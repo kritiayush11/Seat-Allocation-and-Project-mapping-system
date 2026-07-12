@@ -34,14 +34,23 @@ Be concise and accurate. Do not make up data — only use what tools return."""
 
 
 def _get_client_and_source() -> tuple[Optional[OpenAI], str]:
-    """Return (OpenAI client, source_name) for the first configured provider."""
-    if settings.GROK_API_KEY or settings.XAI_API_KEY:
-        key = settings.GROK_API_KEY or settings.XAI_API_KEY
-        return OpenAI(api_key=key, base_url="https://api.x.ai/v1"), "grok"
-    if settings.OPENAI_API_KEY:
+    """Return (OpenAI client, source_name) for the first configured provider.
+    Priority: Groq → Grok (xAI) → OpenAI → Gemini
+    Uses isinstance(key, str) and key to guard against MagicMock in tests.
+    """
+    groq_key = getattr(settings, "GROQ_API_KEY", "")
+    if isinstance(groq_key, str) and groq_key:
+        return OpenAI(
+            api_key=groq_key,
+            base_url="https://api.groq.com/openai/v1",
+        ), "groq"
+    if isinstance(settings.GROK_API_KEY, str) and settings.GROK_API_KEY:
+        return OpenAI(api_key=settings.GROK_API_KEY, base_url="https://api.x.ai/v1"), "grok"
+    if isinstance(settings.XAI_API_KEY, str) and settings.XAI_API_KEY:
+        return OpenAI(api_key=settings.XAI_API_KEY, base_url="https://api.x.ai/v1"), "grok"
+    if isinstance(settings.OPENAI_API_KEY, str) and settings.OPENAI_API_KEY:
         return OpenAI(api_key=settings.OPENAI_API_KEY), "openai"
-    if settings.GEMINI_API_KEY:
-        # Gemini supports OpenAI-compatible endpoint
+    if isinstance(settings.GEMINI_API_KEY, str) and settings.GEMINI_API_KEY:
         return OpenAI(
             api_key=settings.GEMINI_API_KEY,
             base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
@@ -50,6 +59,8 @@ def _get_client_and_source() -> tuple[Optional[OpenAI], str]:
 
 
 def _get_model(source: str) -> str:
+    if source == "groq":
+        return getattr(settings, "GROQ_MODEL", "llama-3.3-70b-versatile")
     if source == "grok":
         return settings.GROK_MODEL      # grok-3-mini
     if source == "gemini":

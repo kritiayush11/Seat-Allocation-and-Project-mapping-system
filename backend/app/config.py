@@ -43,7 +43,12 @@ class Settings(BaseSettings):
     # Gemini (optional)
     GEMINI_API_KEY: str = ""
 
-    # Grok / xAI (free tier — grok-3-mini)
+    # Groq — free inference platform (groq.com), ultra-fast Llama 3.3 70B
+    # Get free key at: https://console.groq.com/keys
+    GROQ_API_KEY: str = ""
+    GROQ_MODEL: str = "llama-3.3-70b-versatile"
+
+    # xAI / Grok (optional fallback)
     GROK_API_KEY: str = ""
     XAI_API_KEY: str = ""
     GROK_MODEL: str = "grok-3-mini"
