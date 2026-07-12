@@ -18,6 +18,15 @@ class SeatStatus(str, enum.Enum):
     RESERVED    = "RESERVED"
     MAINTENANCE = "MAINTENANCE"
 
+    @classmethod
+    def _missing_(cls, value):
+        """Accept lowercase values like 'available', 'occupied' etc."""
+        if isinstance(value, str):
+            for member in cls:
+                if member.value == value.upper():
+                    return member
+        return None
+
 
 class Seat(Base):
     __tablename__ = "seats"

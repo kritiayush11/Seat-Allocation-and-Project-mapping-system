@@ -17,6 +17,15 @@ class AllocationStatus(str, enum.Enum):
     RELEASED    = "RELEASED"
     TRANSFERRED = "TRANSFERRED"
 
+    @classmethod
+    def _missing_(cls, value):
+        """Accept lowercase values like 'active', 'released' etc."""
+        if isinstance(value, str):
+            for member in cls:
+                if member.value == value.upper():
+                    return member
+        return None
+
 
 class SeatAllocation(Base):
     __tablename__ = "seat_allocations"

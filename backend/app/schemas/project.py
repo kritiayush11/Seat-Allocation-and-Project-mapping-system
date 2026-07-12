@@ -4,9 +4,10 @@ Pydantic schemas for Project entity.
 Enum serialisation note:
   Models store UPPERCASE values (matching Neon PostgreSQL enum types).
   API responses serialise them as lowercase for frontend/test consistency.
+  Input accepts both cases via field_validator on all input schemas.
 """
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Any
 from pydantic import BaseModel, Field, field_serializer, field_validator
 from ..models.project import ProjectStatus
 
@@ -16,6 +17,14 @@ class ProjectBase(BaseModel):
     description: Optional[str] = Field(None, max_length=500)
     manager_name: Optional[str] = Field(None, max_length=150)
     status: ProjectStatus = ProjectStatus.ACTIVE
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def normalise_status(cls, v: Any) -> Any:
+        """Accept 'active', 'ACTIVE', 'archived' etc — normalise to UPPERCASE."""
+        if isinstance(v, str):
+            return v.upper()
+        return v
 
 
 class ProjectCreate(ProjectBase):
@@ -30,8 +39,7 @@ class ProjectUpdate(BaseModel):
 
     @field_validator("status", mode="before")
     @classmethod
-    def normalise_status(cls, v):
-        """Accept both 'ARCHIVED' and 'archived' — normalise to uppercase."""
+    def normalise_status(cls, v: Any) -> Any:
         if isinstance(v, str):
             return v.upper()
         return v

@@ -18,6 +18,15 @@ class EmployeeStatus(str, enum.Enum):
     ON_LEAVE   = "ON_LEAVE"
     TERMINATED = "TERMINATED"
 
+    @classmethod
+    def _missing_(cls, value):
+        """Accept lowercase values like 'active', 'inactive', 'on_leave' etc."""
+        if isinstance(value, str):
+            for member in cls:
+                if member.value == value.upper():
+                    return member
+        return None
+
 
 class Employee(Base):
     __tablename__ = "employees"

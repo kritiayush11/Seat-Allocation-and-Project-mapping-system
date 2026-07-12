@@ -137,7 +137,9 @@ class TestNeonSchemaIntegrity:
         assert count > 0, "seat_allocations table is empty on Neon"
 
     def test_expected_row_counts(self):
-        """Verify migrated counts match what we imported from SQLite."""
+        """Verify migrated counts are at least the original migration snapshot.
+        Uses >= because Neon is a live DB and rows grow as the app is used.
+        """
         from app.database import engine
         from sqlalchemy import text
         with engine.connect() as conn:
@@ -146,10 +148,10 @@ class TestNeonSchemaIntegrity:
             seats     = conn.execute(text("SELECT COUNT(*) FROM seats")).scalar()
             allocs    = conn.execute(text("SELECT COUNT(*) FROM seat_allocations")).scalar()
 
-        assert employees == 5001, f"Expected 5001 employees, got {employees}"
-        assert projects  == 11,   f"Expected 11 projects, got {projects}"
-        assert seats     == 5500, f"Expected 5500 seats, got {seats}"
-        assert allocs    == 4951, f"Expected 4951 allocations, got {allocs}"
+        assert employees >= 5001, f"Expected >= 5001 employees, got {employees}"
+        assert projects  >= 11,   f"Expected >= 11 projects, got {projects}"
+        assert seats     >= 5500, f"Expected >= 5500 seats, got {seats}"
+        assert allocs    >= 4951, f"Expected >= 4951 allocations, got {allocs}"
 
     def test_employees_table_has_expected_columns(self):
         from app.database import engine

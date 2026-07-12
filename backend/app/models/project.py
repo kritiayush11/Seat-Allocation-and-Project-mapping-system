@@ -16,6 +16,15 @@ class ProjectStatus(str, enum.Enum):
     INACTIVE = "INACTIVE"
     ARCHIVED = "ARCHIVED"
 
+    @classmethod
+    def _missing_(cls, value):
+        """Accept lowercase values like 'active', 'archived' etc."""
+        if isinstance(value, str):
+            for member in cls:
+                if member.value == value.upper():
+                    return member
+        return None
+
 
 class Project(Base):
     __tablename__ = "projects"
